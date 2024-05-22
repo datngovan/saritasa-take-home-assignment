@@ -2,10 +2,11 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    colors: {
-      primary: "#f15a24",
+    extend: {
+      gridTemplateColumns: {
+        "form-row": "1fr 2fr 1fr",
+      },
     },
-    extend: {},
   },
   plugins: [],
 };

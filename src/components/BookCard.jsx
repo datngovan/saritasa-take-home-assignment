@@ -1,5 +1,6 @@
 function BookCard({ book }) {
-  const { Name, rating, Author, ISBN, PublicationYear } = book;
+  const { name, rating, author, ISBN, publicYear } = book;
+  console.log("author", author);
   return (
     <div className="flex m-5 border-2">
       <div>
@@ -10,7 +11,7 @@ function BookCard({ book }) {
         />
       </div>
       <div className="flex flex-col">
-        <h2 className="text-3xl">{Name}</h2>
+        <h2 className="text-3xl">{name}</h2>
         <div className="flex items-center">
           <svg
             className="w-4 h-4 text-yellow-300 ms-1"
@@ -31,9 +32,14 @@ function BookCard({ book }) {
             10
           </p>
         </div>
-        <h2>{Author}</h2>
-        <h2>{PublicationYear}</h2>
-        <h2>{ISBN}</h2>
+        <div className="flex gap-2">
+          Authors:
+          {author.map((each) => (
+            <h3 key={each}>{each}</h3>
+          ))}
+        </div>
+        <h2>Publication Year: {publicYear}</h2>
+        <h2>ISBN: {ISBN}</h2>
       </div>
     </div>
   );
