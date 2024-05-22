@@ -1,8 +1,14 @@
+import { useState } from "react";
+import Button from "../ui/Button";
+import Modal from "../ui/Modal";
+import Form from "./Form";
+
 function BookCard({ book }) {
   const { name, rating, author, ISBN, publicYear } = book;
-  console.log("author", author);
+  const [openEditModal, setEditOpenModal] = useState(false);
+  const [openConfirm, setOpenConfirm] = useState(false);
   return (
-    <div className="flex m-5 border-2">
+    <div className="grid grid-cols-form-row m-5 p-5 border-2 rounded-md shadow-md bg-white justify-around">
       <div>
         <img
           width={`100px`}
@@ -40,6 +46,31 @@ function BookCard({ book }) {
         </div>
         <h2>Publication Year: {publicYear}</h2>
         <h2>ISBN: {ISBN}</h2>
+      </div>
+      <div className="flex items-start gap-5 justify-end">
+        <Button
+          content={"Update"}
+          size="small"
+          onClick={() => setEditOpenModal(true)}
+        />
+        {}
+        <Button
+          content={"Delete"}
+          variation="danger"
+          size="small"
+          onClick={() => {
+            setOpenConfirm(true);
+          }}
+        />
+        {openConfirm && (
+          <Modal
+            onClose={() => {
+              setOpenConfirm(false);
+            }}
+          >
+            Do you want to delete this book
+          </Modal>
+        )}
       </div>
     </div>
   );

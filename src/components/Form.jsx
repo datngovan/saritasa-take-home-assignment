@@ -41,6 +41,7 @@ export default function Form({ bookToEdit = {}, onCloseModal }) {
   const booksCollectionRef = collection(db, "Books");
   const onSubmit = (data) => {
     onSubmitBook(data);
+    onCloseModal?.();
   };
   const deleteBook = async (id) => {
     const bookDoc = doc(db, "Books", id);
@@ -55,7 +56,6 @@ export default function Form({ bookToEdit = {}, onCloseModal }) {
       const bookDoc = doc(db, "Books", bookToEdit.id);
       await updateDoc(bookDoc, { ...data, author: authorsData });
     } else {
-      // validateAuthor(data.author);
       await addDoc(booksCollectionRef, {
         name: data.name,
         author: authorsData,
