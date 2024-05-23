@@ -8,8 +8,22 @@ import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { getBooks, addBook } from "../services/bookServices";
 import { getBook } from "../store/book/bookSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 export default function Form({ bookToEdit = {}, onClose }) {
+  const schema = yup.object({
+    name: yup
+      .string()
+      .required()
+      .max(100, "Name must be lest thann 100 characters"),
+    publicYear: yup.number().min(1800, "Public Year must be higher than 1800"),
+    rating: yup
+      .number()
+      .min(0, "Rating must higher than 0")
+      .max(10, "Rating must lower than 10"),
+    ISBN: yup.string().required("This ISBN is required"),
+  });
   const isEdit = Boolean(bookToEdit.id);
   const [openModal, setOpenModal] = useState(false);
   const {
@@ -30,6 +44,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
       : {
           author: [{ name: " " }],
         },
+    resolver: yupResolver(schema),
   });
   const { fields, append, remove } = useFieldArray({
     control, // control props comes from useForm (optional: if you are using FormProvider)
@@ -39,10 +54,12 @@ export default function Form({ bookToEdit = {}, onClose }) {
   const onSubmit = (data) => {
     onSubmitBook(data);
     setOpenModal(false);
+    console.log("data", data);
     onClose();
     reset();
   };
   const onSubmitBook = async (data) => {
+    console.log("data", data);
     const authorsData = data.author.map((author) => {
       return author["name"];
     });
@@ -88,19 +105,20 @@ export default function Form({ bookToEdit = {}, onClose }) {
             onSubmit={handleSubmit(onSubmit)}
             className="w-[40rem] lg:w-[60rem] h-[35rem] overflow-auto text-[14px]"
           >
-            <FormRow label={"Book Name"} error={errors?.Name?.message}>
+            <FormRow label={"Book Name"} error={errors?.name?.message}>
               <input
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="text"
                 placeholder="Name"
-                {...register("name", {
-                  required: "This field is required",
-                  max: 100,
-                })}
+                {...register("name")}
               />
             </FormRow>
             {fields.map((item, index) => (
-              <FormRow label={`Author ${index + 1}`} key={item.id}>
+              <FormRow
+                label={`Author ${index + 1}`}
+                key={item.id}
+                error={errors?.author?.message}
+              >
                 <input
                   className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                   {...register(`author.${index}.name`)}
@@ -119,28 +137,28 @@ export default function Form({ bookToEdit = {}, onClose }) {
                 </div>
               </FormRow>
             ))}
-            <FormRow label={"Public Year"}>
+            <FormRow label={"Public Year"} error={errors?.publicYear?.message}>
               <input
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="number"
                 placeholder="Public Year"
-                {...register("publicYear", { required: true, min: 1800 })}
+                {...register("publicYear")}
               />
             </FormRow>
-            <FormRow label={"Rating"}>
+            <FormRow label={"Rating"} error={errors?.rating?.message}>
               <input
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="number"
                 placeholder="Rating"
-                {...register("rating", { required: true, max: 10, min: 0 })}
+                {...register("rating")}
               />
             </FormRow>
-            <FormRow label={"ISBN"}>
+            <FormRow label={"ISBN"} error={errors?.ISBN?.message}>
               <input
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="text"
                 placeholder="ISBN"
-                {...register("ISBN", { required: true, max: 100 })}
+                {...register("ISBN")}
               />
             </FormRow>
             <FormRow>
