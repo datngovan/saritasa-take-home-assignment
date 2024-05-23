@@ -1,60 +1,47 @@
 import { useEffect, useState } from "react";
-import { db } from "./services/firebase";
-import { getDocs, collection } from "firebase/firestore";
-import getBookList from "./services/bookServices";
-
+import { getBooks, getRecomendedBooks } from "./services/bookServices";
 import BookLists from "./components/BooksList";
-import Modal from "./ui/Modal";
 import Form from "./components/Form";
-import Button from "./ui/Button";
-import { increment, getBook } from "./store/book/bookSlice";
+import { getBook, getRecommendedBook } from "./store/book/bookSlice";
 import { useDispatch, useSelector } from "react-redux";
+import Spinner from "./ui/Spinner";
+import RecommendBook from "./components/RecommendBook";
 function App() {
-  const [BookList, setBookList] = useState([]);
-  const [openModal, setOpenModal] = useState(false);
+  const [BookList, setBookList] = useState({});
   const [groupBy, setGroupBy] = useState("year");
-  const count = useSelector((state) => state.book.book);
+  const [isLoading, setIsLoading] = useState(false);
+  const BookData = useSelector((state) => state.book.book);
+  const RecommendBookBookData = useSelector(
+    (state) => state.book.RecommendBook
+  );
+
   const dispatch = useDispatch();
   useEffect(() => {
-    getBookList(groupBy).then((data) => {
+    setIsLoading(true);
+    getBooks(groupBy).then((data) => {
       console.log("data", data);
+      dispatch(getBook(data));
       setBookList(data);
-      dispatch(getBook(BookList));
+      setIsLoading(false);
+    });
+    getRecomendedBooks().then((data) => {
+      console.log("data", data);
+      dispatch(getRecommendedBook(data));
+      console.log("BokList", RecommendBookBookData);
     });
   }, [groupBy]);
-  console.log("count", count);
   return (
     <>
-      <button
-        aria-label="Increment value"
-        onClick={() => dispatch(increment())}
-      >
-        Increment
-      </button>
       <div className="flex justify-between mx-10 border-b-2">
-        {openModal && (
-          <Modal
-            onClose={() => {
-              setOpenModal(false);
-            }}
-          >
-            <Form
-              onCloseModal={() => {
-                getBookList();
-                setOpenModal(false);
-              }}
-            />
-          </Modal>
-        )}
-        <Button
-          content={"Add Book"}
-          size="small"
-          onClick={() => {
-            setOpenModal(true);
+        <Form
+          onClose={() => {
+            getBooks().then((data) => {
+              dispatch(getBook(data));
+              setBookList(data);
+              console.log(data);
+            });
           }}
-        >
-          open modal
-        </Button>
+        />
         <div>
           <label htmlFor="groupBy">Group By:</label>
 
@@ -71,7 +58,15 @@ function App() {
           </select>
         </div>
       </div>
-      <BookLists booksList={BookList} />
+      {/*  */}
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <RecommendBook book={RecommendBookBookData} />
+          <BookLists booksList={BookData} />
+        </>
+      )}
     </>
   );
 }

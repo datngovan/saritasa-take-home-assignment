@@ -1,8 +1,14 @@
 import { db } from "./firebase";
-import { getDocs, collection } from "firebase/firestore";
-
+import {
+  getDocs,
+  collection,
+  doc,
+  deleteDoc,
+  updateDoc,
+  addDoc,
+} from "firebase/firestore";
 const booksCollectionRef = collection(db, "Books");
-export default async function getBookList(option = "year") {
+export async function getBooks(option = "year") {
   try {
     const data = await getDocs(booksCollectionRef);
     const filterData = data.docs.map((doc) => ({
@@ -21,8 +27,42 @@ export default async function getBookList(option = "year") {
     console.log(error);
   }
 }
+export async function getRecomendedBooks() {
+  try {
+    const data = await getDocs(booksCollectionRef);
+    const filterData = data.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+    }));
+    const bookByRating = groupByRating(filterData);
+    const highestScore = Math.max(...Object.keys(bookByRating));
+    const result = bookByRating[highestScore];
+    if (result.length > 1) {
+      const random = Math.floor(Math.random() * result.length);
+      console.log("result", result[random]);
+      return result[random];
+    }
+    console.log("result", result);
+    return result[0];
+  } catch (error) {
+    console.log(error);
+  }
+}
+const addBook = async (data) => {
+  await addDoc(booksCollectionRef, { ...data });
+};
+const deleteBook = async (id) => {
+  const bookDoc = doc(db, "Books", id);
+  await deleteDoc(bookDoc);
+};
+const editBook = async (id, data) => {
+  const bookDoc = doc(db, "Books", id);
+  console.log("bookDoc", bookDoc);
+  await updateDoc(bookDoc, { ...data });
+};
 function groupByYear(booksList) {
   const result = Object.groupBy(booksList, ({ publicYear }) => publicYear);
+
   return result;
 }
 function groupByRating(booksList) {
@@ -42,3 +82,5 @@ function groupByAuthor(booksList) {
   });
   return result;
 }
+
+export { editBook, addBook, deleteBook };

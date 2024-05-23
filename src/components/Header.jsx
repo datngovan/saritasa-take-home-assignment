@@ -1,9 +1,9 @@
-import getBookList from "../services/bookServices";
+import getBooks from "../services/bookServices";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import Form from "./Form";
 
-function Header(openModal, ) {
+function Header(openModal) {
   return (
     <div className="flex justify-between mx-10 border-b-2">
       {openModal && (
@@ -14,7 +14,7 @@ function Header(openModal, ) {
         >
           <Form
             onCloseModal={() => {
-              getBookList();
+              getBooks();
               setOpenModal(false);
             }}
           />
