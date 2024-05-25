@@ -1,5 +1,5 @@
 import { doc, updateDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useForm, useFieldArray } from "react-hook-form";
 import { db } from "../services/firebase";
@@ -8,22 +8,48 @@ import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import { getBooks, addBook } from "../services/bookServices";
 import { getBook } from "../store/book/bookSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { audit } from "isbn3";
 export default function Form({ bookToEdit = {}, onClose }) {
+
+  // Yup validation schema
+  const AuthorParse = bookToEdit?.author?.map((author) => {
+    return {
+      author: author,
+    };
+  });
+
+  const validateISBN = async (value) => {
+    const data = await audit(value).validIsbn;
+    return data;
+  };
   const schema = yup.object({
     name: yup
       .string()
       .required()
       .max(100, "Name must be lest thann 100 characters"),
-    publicYear: yup.number().min(1800, "Public Year must be higher than 1800"),
+    publicYear: yup
+      .number()
+      .min(1800, "Public Year must be higher than 1800")
+      .nullable(true)
+      .transform((_, val) => (val === Number(val) ? val : null)),
+    author: yup.array().of(
+      yup.object().shape({
+        author: yup.string().required("Author name is required"),
+      })
+    ),
     rating: yup
       .number()
       .min(0, "Rating must higher than 0")
       .max(10, "Rating must lower than 10"),
-    ISBN: yup.string().required("This ISBN is required"),
+    ISBN: yup.string().test("verified", "ISBN is invalid", async (value) => {
+      const verified = await audit(value).validIsbn;
+      return verified;
+    }),
   });
+  // check if it's the edit session or create session
   const isEdit = Boolean(bookToEdit.id);
   const [openModal, setOpenModal] = useState(false);
   const {
@@ -36,13 +62,14 @@ export default function Form({ bookToEdit = {}, onClose }) {
     defaultValues: isEdit
       ? {
           name: bookToEdit.name,
-          author: bookToEdit.author.map((name) => ({ name })),
+          author: AuthorParse,
           publicYear: bookToEdit.publicYear,
           rating: bookToEdit.rating,
           ISBN: bookToEdit.ISBN,
         }
       : {
-          author: [{ name: " " }],
+          author: [{ author: " " }],
+          rating: 0,
         },
     resolver: yupResolver(schema),
   });
@@ -54,28 +81,48 @@ export default function Form({ bookToEdit = {}, onClose }) {
   const onSubmit = (data) => {
     onSubmitBook(data);
     setOpenModal(false);
-    console.log("data", data);
-    onClose();
-    reset();
+    getBooks().then((data) => {
+      dispatch(getBook(data));
+    });
   };
   const onSubmitBook = async (data) => {
-    console.log("data", data);
+
     const authorsData = data.author.map((author) => {
-      return author["name"];
+      return author["author"];
     });
     if (isEdit) {
       const bookDoc = doc(db, "Books", bookToEdit.id);
+      if (isNaN(data.publicYear)) {
+        data = { ...data, publicYear: NaN };
+      }
+      if (isNaN(data.rating)) {
+        data = { ...data, rating: 0 };
+      }
       await updateDoc(bookDoc, { ...data, author: authorsData });
-      getBooks().then((data) => {
-        dispatch(getBook(data));
-      });
     } else {
-      addBook({ ...data, author: authorsData });
-      getBooks().then((data) => {
-        dispatch(getBook(data));
-      });
+      await addBook({ ...data, author: authorsData });
     }
   };
+  const resetAsyncForm = useCallback(async () => {
+    reset(
+      isEdit
+        ? {
+            name: bookToEdit.name,
+            author: AuthorParse,
+            publicYear: bookToEdit.publicYear,
+            rating: bookToEdit.rating,
+            ISBN: bookToEdit.ISBN,
+          }
+        : {
+            author: [{ author: " " }],
+            rating: 0,
+          }
+    ); // asynchronously reset your form values
+  }, [reset]);
+
+  useEffect(() => {
+    resetAsyncForm();
+  }, [resetAsyncForm]);
   return (
     <>
       {isEdit ? (
@@ -103,6 +150,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
         >
           <form
             onSubmit={handleSubmit(onSubmit)}
+            key={bookToEdit.id}
             className="w-[40rem] lg:w-[60rem] h-[35rem] overflow-auto text-[14px]"
           >
             <FormRow label={"Book Name"} error={errors?.name?.message}>
@@ -116,12 +164,12 @@ export default function Form({ bookToEdit = {}, onClose }) {
             {fields.map((item, index) => (
               <FormRow
                 label={`Author ${index + 1}`}
-                key={item.id}
-                error={errors?.author?.message}
+                key={item.id.concat(index)}
+                error={errors?.author?.[index]?.author?.message}
               >
                 <input
                   className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
-                  {...register(`author.${index}.name`)}
+                  {...register(`author.${index}.author`)}
                 />
                 <div className="flex justify-end">
                   {index > 0 && (
@@ -130,7 +178,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
                     </button>
                   )}
                   {index == fields.length - 1 && (
-                    <button onClick={() => append({ name: "John" })}>
+                    <button onClick={() => append({ author: "" })}>
                       <PlusIcon className="size-6 text-blue-500" />
                     </button>
                   )}
@@ -158,7 +206,9 @@ export default function Form({ bookToEdit = {}, onClose }) {
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="text"
                 placeholder="ISBN"
-                {...register("ISBN")}
+                {...register("ISBN", {
+                  validate: validateISBN,
+                })}
               />
             </FormRow>
             <FormRow>
@@ -167,12 +217,20 @@ export default function Form({ bookToEdit = {}, onClose }) {
                   variation="secondary"
                   type="reset"
                   content="Cancel"
-                  onClick={() => setOpenModal(false)}
+                  onClick={() => {
+                    setOpenModal(false);
+                    reset();
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button
                   content={`${isEdit ? "Edit Book" : "Add Book"}`}
+                  onClick={() => {
+                    getBooks().then((data) => {
+                      dispatch(getBook(data));
+                    });
+                  }}
                 ></Button>
               </div>
             </FormRow>

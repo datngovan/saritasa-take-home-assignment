@@ -8,7 +8,6 @@ import { getBook } from "../store/book/bookSlice";
 
 function BookCard({ book }) {
   const { name, rating, author, ISBN, publicYear, id } = book;
-  const [openEditModal, setOpenEditModal] = useState(true);
   const [openConfirm, setOpenConfirm] = useState(false);
   const dispatch = useDispatch();
   return (
@@ -46,14 +45,14 @@ function BookCard({ book }) {
           <div className="flex gap-2">
             Authors:
             {author?.map((each) => (
-              <h3 key={each}>{each}</h3>
+              <h3 key={each + id}>{each}</h3>
             ))}
           </div>
           <h2>Publication Year: {publicYear}</h2>
           <h2>ISBN: {ISBN}</h2>
         </div>
         <div className="flex items-start gap-5 justify-end">
-          <Form bookToEdit={book} onClose={() => console.log("hello")} />
+          <Form bookToEdit={book} />
           <Button
             content={"Delete"}
             variation="danger"
@@ -79,7 +78,6 @@ function BookCard({ book }) {
                     setOpenConfirm(false);
                     getBooks().then((data) => {
                       dispatch(getBook(data));
-                      console.log(data);
                     });
                   }}
                 />

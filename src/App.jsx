@@ -7,8 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import Spinner from "./ui/Spinner";
 import RecommendBook from "./components/RecommendBook";
 function App() {
-  const [BookList, setBookList] = useState({});
   const [groupBy, setGroupBy] = useState("year");
+  const [books, setBooks] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const BookData = useSelector((state) => state.book.book);
   const RecommendBookBookData = useSelector(
@@ -19,29 +19,18 @@ function App() {
   useEffect(() => {
     setIsLoading(true);
     getBooks(groupBy).then((data) => {
-      console.log("data", data);
       dispatch(getBook(data));
-      setBookList(data);
       setIsLoading(false);
     });
     getRecomendedBooks().then((data) => {
-      console.log("data", data);
       dispatch(getRecommendedBook(data));
-      console.log("BokList", RecommendBookBookData);
     });
   }, [groupBy]);
   return (
     <>
       <div className="flex justify-between mx-10 border-b-2">
-        <Form
-          onClose={() => {
-            getBooks().then((data) => {
-              dispatch(getBook(data));
-              setBookList(data);
-              console.log(data);
-            });
-          }}
-        />
+        {/* Add Book Form */}
+        <Form />
         <div>
           <label htmlFor="groupBy">Group By:</label>
 

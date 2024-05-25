@@ -1,7 +1,6 @@
 import BookCard from "./BookCard";
 
 function BooksList({ booksList }) {
-  console.log("booksList", booksList);
   return (
     <div>
       {Object.keys(booksList).map((key) => (

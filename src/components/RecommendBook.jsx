@@ -3,12 +3,11 @@ import { getRecomendedBooks } from "../services/bookServices";
 import BooksList from "./BooksList";
 import BookCard from "./BookCard";
 
-function RecommendBook({book}) {
-  
+function RecommendBook({ book }) {
   return (
     <div>
       RecommendBook
-      <BookCard book={book} />
+      {book ? <BookCard book={book} /> : "Not Found"}
     </div>
   );
 }

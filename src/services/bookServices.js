@@ -1,4 +1,5 @@
 import { db } from "./firebase";
+
 import {
   getDocs,
   collection,
@@ -39,10 +40,8 @@ export async function getRecomendedBooks() {
     const result = bookByRating[highestScore];
     if (result.length > 1) {
       const random = Math.floor(Math.random() * result.length);
-      console.log("result", result[random]);
       return result[random];
     }
-    console.log("result", result);
     return result[0];
   } catch (error) {
     console.log(error);
@@ -57,7 +56,6 @@ const deleteBook = async (id) => {
 };
 const editBook = async (id, data) => {
   const bookDoc = doc(db, "Books", id);
-  console.log("bookDoc", bookDoc);
   await updateDoc(bookDoc, { ...data });
 };
 function groupByYear(booksList) {
