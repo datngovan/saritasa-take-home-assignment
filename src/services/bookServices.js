@@ -48,9 +48,9 @@ async function getRecomendedBooks() {
     const highestScoreBooks = bookByRating[highestScore];
     const currentYear = getCurrentYear();
     // filter public year is not null and not lower than 3 year of publication
-    const result = highestScoreBooks.filter(
-      (book) => book.publicYear === null && currentYear - book.publicYear >= 3
-    );
+    const result = highestScoreBooks.filter((book) => {
+      return currentYear - book.publicYear >= 3;
+    });
     // if there is more than 1 book get random value or return the book
     if (result.length > 1) {
       const random = Math.floor(Math.random() * result.length);

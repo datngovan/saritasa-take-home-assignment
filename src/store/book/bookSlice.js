@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  RecommendBook: [],
+  RecommendBook: {},
   book: {},
   group: "year",
 };
