@@ -2,28 +2,31 @@ import { doc, updateDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useForm, useFieldArray } from "react-hook-form";
-import { db } from "../services/firebase";
-import FormRow from "../ui/FormRow";
-import Button from "../ui/Button";
-import Modal from "../ui/Modal";
-import { getBooks, addBook } from "../services/bookServices";
-import { getBook } from "../store/book/bookSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { audit } from "isbn3";
-export default function Form({ bookToEdit = {}, onClose }) {
-  // Yup validation schema
+
+import { db } from "../services/firebase";
+import { getBooks, addBook } from "../services/bookServices";
+import { getBook } from "../store/book/bookSlice";
+
+import FormRow from "../ui/FormRow";
+import Button from "../ui/Button";
+import Modal from "../ui/Modal";
+export default function Form({ bookToEdit = {} }) {
+  // check if it's the edit session or create session
+  const isEdit = Boolean(bookToEdit.id);
+  const [openModal, setOpenModal] = useState(false);
+  const BookData = useSelector((state) => state.book.group);
+  const dispatch = useDispatch();
+  // parse the author from array to list of object array because react-hook-form does not support flat array
   const AuthorParse = bookToEdit?.author?.map((author) => {
     return {
       author: author,
     };
   });
-
-  const validateISBN = async (value) => {
-    const data = await audit(value).validIsbn;
-    return data;
-  };
+  // Yup validation schema
   const schema = yup.object({
     name: yup
       .string()
@@ -33,7 +36,8 @@ export default function Form({ bookToEdit = {}, onClose }) {
       .number()
       .min(1800, "Public Year must be higher than 1800")
       .nullable(true)
-      .transform((_, val) => (val === Number(val) ? val : null)),
+      // checking self-equality works for NaN, transforming it to null
+      .transform((_, val) => (val ? Number(val) : null)),
     author: yup.array().of(
       yup.object().shape({
         author: yup.string().required("Author name is required"),
@@ -43,15 +47,17 @@ export default function Form({ bookToEdit = {}, onClose }) {
       .number()
       .min(0, "Rating must higher than 0")
       .max(10, "Rating must lower than 10"),
-    ISBN: yup.string().test("verified", "ISBN is invalid", async (value) => {
-      const verified = await audit(value).validIsbn;
-      return verified;
-    }),
+    ISBN: yup
+      .string()
+      .nullable(true)
+      // test the ISBN using isbn3 function audit() library
+      .test("verified", "ISBN is invalid", (value) => {
+        if (value.length > 0) {
+          return audit(value).validIsbn;
+        }
+        return true;
+      }),
   });
-  // check if it's the edit session or create session
-  const isEdit = Boolean(bookToEdit.id);
-  const [openModal, setOpenModal] = useState(false);
-  const BookData = useSelector((state) => state.book.group);
   const {
     register,
     control,
@@ -68,16 +74,15 @@ export default function Form({ bookToEdit = {}, onClose }) {
           ISBN: bookToEdit.ISBN,
         }
       : {
-          author: [{ author: " " }],
           rating: 0,
         },
     resolver: yupResolver(schema),
   });
+  // useFieldArray for multiple Author input option
   const { fields, append, remove } = useFieldArray({
     control, // control props comes from useForm (optional: if you are using FormProvider)
     name: "author", // unique name for your Field Array
   });
-  const dispatch = useDispatch();
   const onSubmit = (data) => {
     onSubmitBook(data);
     setOpenModal(false);
@@ -85,14 +90,17 @@ export default function Form({ bookToEdit = {}, onClose }) {
       dispatch(getBook(data));
     });
   };
+  //function to sumbmit book on Form
   const onSubmitBook = async (data) => {
+    // map the aray of author object to flat array Ex: author: [{author: a}, {author: b}] =>author: [a,b]
     const authorsData = data.author.map((author) => {
       return author["author"];
     });
+    // if edit then using updateDoc otherwise using addDoc
     if (isEdit) {
       const bookDoc = doc(db, "Books", bookToEdit.id);
-      if (isNaN(data.publicYear)) {
-        data = { ...data, publicYear: NaN };
+      if (data.publicYear === null) {
+        data = { ...data, publicYear: null };
       }
       if (isNaN(data.rating)) {
         data = { ...data, rating: 0 };
@@ -102,6 +110,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
       await addBook({ ...data, author: authorsData });
     }
   };
+  // after sumit the form using resetAsyncForm to re-initialize default value
   const resetAsyncForm = useCallback(async () => {
     reset(
       isEdit
@@ -113,7 +122,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
             ISBN: bookToEdit.ISBN,
           }
         : {
-            author: [{ author: " " }],
+            author: [{ author: "" }],
             rating: 0,
           }
     ); // asynchronously reset your form values
@@ -205,9 +214,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
                 className="bg-white border-[1px] border-gray-300 rounded-sm px-[12px] py-[8px] shadow-sm"
                 type="text"
                 placeholder="ISBN"
-                {...register("ISBN", {
-                  validate: validateISBN,
-                })}
+                {...register("ISBN")}
               />
             </FormRow>
             <FormRow>
@@ -218,7 +225,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
                   content="Cancel"
                   onClick={() => {
                     setOpenModal(false);
-                    reset();
+                    resetAsyncForm();
                   }}
                 >
                   Cancel

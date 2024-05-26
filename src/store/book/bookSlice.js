@@ -1,6 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { addBook } from "../../services/bookServices";
-import RecommendBook from "../../components/RecommendBook";
 
 const initialState = {
   RecommendBook: [],
@@ -20,9 +18,6 @@ export const bookSlice = createSlice({
     },
     getgroupBy: (state, action) => {
       state.group = action.payload;
-    },
-    addBook: (state, action) => {
-      state.book = { ...state.book, ...action.payload };
     },
   },
 });
