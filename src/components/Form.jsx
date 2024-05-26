@@ -13,7 +13,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { audit } from "isbn3";
 export default function Form({ bookToEdit = {}, onClose }) {
-
   // Yup validation schema
   const AuthorParse = bookToEdit?.author?.map((author) => {
     return {
@@ -52,6 +51,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
   // check if it's the edit session or create session
   const isEdit = Boolean(bookToEdit.id);
   const [openModal, setOpenModal] = useState(false);
+  const BookData = useSelector((state) => state.book.group);
   const {
     register,
     control,
@@ -81,12 +81,11 @@ export default function Form({ bookToEdit = {}, onClose }) {
   const onSubmit = (data) => {
     onSubmitBook(data);
     setOpenModal(false);
-    getBooks().then((data) => {
+    getBooks(BookData).then((data) => {
       dispatch(getBook(data));
     });
   };
   const onSubmitBook = async (data) => {
-
     const authorsData = data.author.map((author) => {
       return author["author"];
     });
@@ -151,7 +150,7 @@ export default function Form({ bookToEdit = {}, onClose }) {
           <form
             onSubmit={handleSubmit(onSubmit)}
             key={bookToEdit.id}
-            className="w-[40rem] lg:w-[60rem] h-[35rem] overflow-auto text-[14px]"
+            className="w-[15rem] h-[20rem] lg:w-[60rem] lg:h-[35rem] overflow-auto text-[14px]"
           >
             <FormRow label={"Book Name"} error={errors?.name?.message}>
               <input

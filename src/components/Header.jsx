@@ -5,30 +5,9 @@ import Form from "./Form";
 
 function Header(openModal) {
   return (
-    <div className="flex justify-between mx-10 border-b-2">
-      {openModal && (
-        <Modal
-          onClose={() => {
-            setOpenModal(false);
-          }}
-        >
-          <Form
-            onCloseModal={() => {
-              getBooks();
-              setOpenModal(false);
-            }}
-          />
-        </Modal>
-      )}
-      <Button
-        content={"Add Book"}
-        size="small"
-        onClick={() => {
-          setOpenModal(true);
-        }}
-      >
-        open modal
-      </Button>
+    <div className="flex justify-end mx-10 border-b-2">
+      {/* Add Book Form */}
+      <Form />
       <div>
         <label htmlFor="groupBy">Group By:</label>
 

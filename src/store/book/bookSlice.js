@@ -5,6 +5,7 @@ import RecommendBook from "../../components/RecommendBook";
 const initialState = {
   RecommendBook: [],
   book: {},
+  group: "year",
 };
 
 export const bookSlice = createSlice({
@@ -17,6 +18,9 @@ export const bookSlice = createSlice({
     getRecommendedBook: (state, action) => {
       state.RecommendBook = action.payload;
     },
+    getgroupBy: (state, action) => {
+      state.group = action.payload;
+    },
     addBook: (state, action) => {
       state.book = { ...state.book, ...action.payload };
     },
@@ -24,5 +28,5 @@ export const bookSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { getBook, getRecommendedBook } = bookSlice.actions;
+export const { getBook, getRecommendedBook, getgroupBy } = bookSlice.actions;
 export default bookSlice.reducer;
