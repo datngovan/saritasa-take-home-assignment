@@ -8,8 +8,12 @@ import * as yup from "yup";
 import { audit } from "isbn3";
 
 import { db } from "../services/firebase";
-import { getBooks, addBook } from "../services/bookServices";
-import { getBook } from "../store/book/bookSlice";
+import {
+  getBooks,
+  addBook,
+  getRecomendedBooks,
+} from "../services/bookServices";
+import { getBook, getRecommendedBook } from "../store/book/bookSlice";
 
 import FormRow from "../ui/FormRow";
 import Button from "../ui/Button";
@@ -88,6 +92,9 @@ export default function Form({ bookToEdit = {} }) {
     setOpenModal(false);
     getBooks(BookData).then((data) => {
       dispatch(getBook(data));
+    });
+    getRecomendedBooks().then((data) => {
+      dispatch(getRecommendedBook(data));
     });
   };
   //function to sumbmit book on Form

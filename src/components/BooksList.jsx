@@ -16,7 +16,7 @@ function BooksList() {
             {key !== `null` && books.group === `year` && `Public In ${key}`}
             {books.group === `author` && `Written By ${key}`}
             {books.group === `rating` && `Rating ${key}`}
-            <div className="flex font-light">
+            <div className="flex flex-wrap items-center font-light">
               {books.book[key]?.map((book) => (
                 <BookCard book={book} key={book.id} />
               ))}

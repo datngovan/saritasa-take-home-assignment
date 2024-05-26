@@ -8,7 +8,7 @@ function Header() {
   const dispatch = useDispatch();
   return (
     <div className="flex justify-between p-2 gap-10 border-b-2 sticky top-0 bg-[#f15a24]">
-      <p className="text-white flex justify-center items-center text-3xl font-bold">
+      <p className="text-white flex justify-center items-center text-lg lg:text-3xl font-bold">
         Saritasa's Take Home Test
       </p>
       <div className="flex">
