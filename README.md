@@ -13,14 +13,15 @@
   <div align="center">
     <a href="https://saritasa-take-home-assignment.vercel.app">View Demo</a>
     •
-    <a href="https://saritasa-take-home-assignment.vercel.app">Report Bug</a>
+    <a href="https://github.com/datngovan/saritasa-take-home-assignment/issues">Report Bug</a>
     •
-    <a href="https://saritasa-take-home-assignment.vercel.app">Request Feature</a>
+    <a href="https://github.com/datngovan/saritasa-take-home-assignment/pulls">Request Feature</a>
   </div>
 
   <hr>
 
 </div>
+
 ## Table of contents
 
 - [Key Features](#key-features)
