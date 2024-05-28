@@ -36,27 +36,30 @@ async function getBooks(option = "year") {
 
 // Get a random best book from firebase
 async function getRecomendedBooks() {
+  const currentYear = getCurrentYear();
+  function checkYear(book) {
+    return currentYear - book.publicYear >= 3;
+  }
   try {
     const data = await getDocs(booksCollectionRef);
     const filterData = data.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id,
     }));
+    // filter public year is not null and not lower than 3 year of publication
+    const oldBook = filterData.filter(checkYear);
     // filter by rating to get highest rating array of Books
-    const bookByRating = groupByRating(filterData);
+    const bookByRating = groupByRating(oldBook);
     const highestScore = Math.max(...Object.keys(bookByRating));
     const highestScoreBooks = bookByRating[highestScore];
-    const currentYear = getCurrentYear();
     // filter public year is not null and not lower than 3 year of publication
-    const result = highestScoreBooks.filter((book) => {
-      return currentYear - book.publicYear >= 3;
-    });
+    // const result = highestScoreBooks.filter(checkYear);
     // if there is more than 1 book get random value or return the book
-    if (result.length > 1) {
-      const random = Math.floor(Math.random() * result.length);
-      return result[random];
+    if (highestScoreBooks.length > 1) {
+      const random = Math.floor(Math.random() * highestScoreBooks.length);
+      return highestScoreBooks[random];
     }
-    return result[0];
+    return highestScoreBooks[0];
   } catch (error) {
     console.log(error);
   }

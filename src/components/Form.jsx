@@ -23,8 +23,6 @@ export default function Form({ bookToEdit = {} }) {
   const isEdit = Boolean(bookToEdit.id);
   const [openModal, setOpenModal] = useState(false);
   const BookData = useSelector((state) => state.book.group);
-  const BookData1 = useSelector((state) => state.book.RecommendBook);
-  console.log("bookData1", BookData1);
   const dispatch = useDispatch();
   // parse the author from array to list of object array because react-hook-form does not support flat array
   const AuthorParse = bookToEdit?.author?.map((author) => {
